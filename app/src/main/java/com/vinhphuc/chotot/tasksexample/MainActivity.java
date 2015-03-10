@@ -1,7 +1,9 @@
 package com.vinhphuc.chotot.tasksexample;
 
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -12,7 +14,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.ImageView;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -77,25 +79,51 @@ public class MainActivity extends ActionBarActivity {
         //listAdapter.notifyDataSetChanged();
 
         // custom dialog
-        final Dialog dialog = new Dialog(context);
-        dialog.setContentView(R.layout.new_dialog);
-        dialog.setTitle("Add new Item");
 
-        // set the custom dialog components - text, image and button
-        TextView text = (TextView) dialog.findViewById(R.id.text);
-        text.setText("Android custom dialog example!");
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+        LayoutInflater inflater = this.getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.new_dialog, null);
+        dialogBuilder.setView(dialogView);
+        dialogBuilder.setTitle("Add your task please");
 
+        EditText editText = (EditText) dialogView.findViewById(R.id.textTaskName);
 
-        Button dialogButton = (Button) dialog.findViewById(R.id.dialogButtonOK);
-        // if button is clicked, close the custom dialog
-        dialogButton.setOnClickListener(new View.OnClickListener() {
+        dialogBuilder.setNegativeButton("Hủy",new DialogInterface.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                dialog.dismiss();
+            public void onClick(DialogInterface dialog, int which) {
+                Log.i("TaskExample", "Vừa nhấn nút hủy");
             }
         });
 
-        dialog.show();
+        dialogBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Log.i("TaskExample", "Vừa nhấn nút OK");
+            }
+        });
+
+        AlertDialog alertDialog = dialogBuilder.create();
+        alertDialog.show();
+
+//        final Dialog dialog = new Dialog(context);
+//        dialog.setContentView(R.layout.new_dialog);
+//        dialog.setTitle("Add new Item");
+//
+//        // set the custom dialog components - text, image and button
+//        TextView text = (TextView) dialog.findViewById(R.id.textTaskName);
+////        text.setText("Android custom dialog example!");
+//
+//
+//        Button dialogButton = (Button) dialog.findViewById(R.id.dialogButtonOK);
+//        // if button is clicked, close the custom dialog
+//        dialogButton.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                dialog.dismiss();
+//            }
+//        });
+//
+//        dialog.show();
     }
 
 
