@@ -101,42 +101,40 @@ public class MainActivity extends ActionBarActivity {
             }
         });
 
-
-        tasks = (TaskModel[]) getLastNonConfigurationInstance();
-        if (tasks == null) {
-            tasks = new TaskModel[]{
-                    new TaskModel("Nguyen Phuc", true), new TaskModel("Nguyen Phuc 2", true), new TaskModel("Earth", false)
-
-            };
-        }
         ArrayList<TaskModel> taskList = new ArrayList<TaskModel>();
 
-       /*
         SharedPreferences prefs = getSharedPreferences(SHARED_PREFS_FILE, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
-        Gson gson = new Gson();
-        String jsonText = gson.toJson(taskList);
-        editor.putString("key",jsonText);
-        editor.commit();
+        String value = prefs.getString(SHARED_PREFS_FILE, "");
+        tasks = (TaskModel[]) getLastNonConfigurationInstance();
 
-        // get
+        if( value.equals("")==true)
+        {
 
-        prefs = getSharedPreferences(SHARED_PREFS_FILE, Context.MODE_PRIVATE);
-        String gsonString = prefs.getString("key","");
-    */
+            if (tasks == null) {
+                tasks = new TaskModel[]{
+                        new TaskModel("Nguyen Phuc", true), new TaskModel("Nguyen Phuc 2", true), new TaskModel("Earth", false)
 
+                };
+            }
+        }
+        else
+        {
 
-        taskList.addAll(Arrays.asList(tasks));
+            // Reading from SharedPreferences
+            String jsonText = prefs.getString(SHARED_PREFS_FILE, "");
+            Log.i("========222==========", jsonText);
 
-        String gsonString = toJson(taskList);
+            taskList = (ArrayList<TaskModel>) fromJson(jsonText,
+                    new TypeToken<ArrayList<TaskModel>>() {
+                    }.getType());
 
-        taskList = (ArrayList<TaskModel>) fromJson(gsonString,
-                new TypeToken<ArrayList<TaskModel>>() {
-                }.getType());
+        }
 
-        // Set our custom array adapter as the ListView's adapter.
+        //taskList.addAll(Arrays.asList(tasks));
         listAdapter = new TaskArrayAdapter(this, taskList);
         mainListView.setAdapter(listAdapter);
+
 
         new RequestTask().execute(BASE_URL);
 
