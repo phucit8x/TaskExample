@@ -8,6 +8,7 @@
         style="?android:attr/buttonStyleSmall"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:onClick="showWeather"
         android:text="Sài Gòn Weather"
         android:id="@+id/button2"
         android:layout_gravity="center_horizontal"

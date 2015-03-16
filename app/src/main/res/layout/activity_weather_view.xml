@@ -1,0 +1,59 @@
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:orientation="vertical"
+android:weightSum="1">
+
+
+<TextView
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="code"
+    android:id="@+id/txtCode"
+    android:layout_gravity="center_horizontal" />
+
+<TextView
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="date"
+    android:id="@+id/txtDate"
+    android:layout_gravity="center_horizontal" />
+
+<TextView
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="day"
+    android:id="@+id/txtDay"
+    android:layout_gravity="center_horizontal" />
+
+<TextView
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="high"
+    android:id="@+id/txtHigh"
+    android:layout_gravity="center_horizontal" />
+
+<TextView
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="low"
+    android:id="@+id/txtLow"
+    android:layout_gravity="center_horizontal" />
+
+<TextView
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="text"
+    android:id="@+id/txtText"
+    android:layout_gravity="center_horizontal" />
+
+<Button
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="Close"
+    android:onClick="closeClick"
+
+    android:id="@+id/buttonClose"
+    android:layout_gravity="center_horizontal" />
+</LinearLayout>

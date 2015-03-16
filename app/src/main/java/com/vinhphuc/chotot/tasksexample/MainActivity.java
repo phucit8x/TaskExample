@@ -3,6 +3,7 @@ package com.vinhphuc.chotot.tasksexample;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -52,11 +53,10 @@ public class MainActivity extends ActionBarActivity  {
     int clickCounter = 0;
     final Context context = this;
     public static String SHARED_PREFS_FILE = "SHARED_PREFS_FILE_";//temporary use this one until the API is ready
-    public static final String BASE_URL = "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20weather.forecast%20where%20woeid%3D1252431&format=json";
-    private ArrayList<TaskModel> taskList;
+    private static ArrayList<TaskModel> taskList;
     public SharedPreferences prefs;
-    public SharedPreferences.Editor editor;
-
+    public static SharedPreferences.Editor editor;
+    List<Weather> myModelList ;
     /**
      * Called when the activity is first created.
      */
@@ -79,6 +79,8 @@ public class MainActivity extends ActionBarActivity  {
                 task.toggleChecked();
                 TaskViewHolder viewHolder = (TaskViewHolder) item.getTag();
                 viewHolder.getCheckBox().setChecked(task.isChecked());
+
+
             }
         });
 
@@ -120,7 +122,6 @@ public class MainActivity extends ActionBarActivity  {
         mainListView.setAdapter(listAdapter);
 
 
-        new RequestTask().execute(BASE_URL);
 
 
     }
@@ -133,7 +134,14 @@ public class MainActivity extends ActionBarActivity  {
     public static Object fromJson(String jsonString, Type type) {
         return new Gson().fromJson(jsonString, type);
     }
+    public void showWeather(View v)
+    {
+        Intent intent = new Intent(context, WeatherView.class);
+        //intent.putExtra("Weather", (android.os.Parcelable) myModelList);
 
+        startActivity(intent);
+
+    }
 
     public void addItems(View v) {
         Log.i("Appname", "Clicked : " + String.valueOf(clickCounter++));
@@ -256,7 +264,7 @@ public class MainActivity extends ActionBarActivity  {
         }
 
         @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
+        public View getView(final int position, View convertView, ViewGroup parent) {
             // Task to display
             TaskModel task = (TaskModel) this.getItem(position);
             // The child views in each row.
@@ -282,6 +290,13 @@ public class MainActivity extends ActionBarActivity  {
                         TaskModel task = (TaskModel) cb.getTag();
                         task.setChecked(cb.isChecked());
 
+                        taskList.set(position, task);
+
+                        //save
+
+
+                        editor.putString(SHARED_PREFS_FILE, toJson(taskList));
+                        editor.commit();
                        // Log.i(">>>>>>>>>>>>>>>>>", cb.getTag().toString());
 
                     }
@@ -321,62 +336,6 @@ public class MainActivity extends ActionBarActivity  {
 //        }
 //
 //    }
-
-    public class RequestTask extends AsyncTask<String, String, String> {
-
-        @Override
-        protected String doInBackground(String... uri) {
-            HttpClient httpclient = new DefaultHttpClient();
-            HttpResponse response;
-            String responseString = null;
-            try {
-                response = httpclient.execute(new HttpGet(uri[0]));
-                StatusLine statusLine = response.getStatusLine();
-                if(statusLine.getStatusCode() == HttpStatus.SC_OK){
-                    ByteArrayOutputStream out = new ByteArrayOutputStream();
-                    response.getEntity().writeTo(out);
-                    responseString = out.toString();
-
-                    out.close();
-                } else{
-                    //Closes the connection.
-                    response.getEntity().getContent().close();
-                    throw new IOException(statusLine.getReasonPhrase());
-                }
-            } catch (ClientProtocolException e) {
-                //TODO Handle problems..
-            } catch (IOException e) {
-                //TODO Handle problems..
-            }
-            return responseString;
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-                try {
-                    JSONObject json = new JSONObject(result);
-
-                    JSONArray array = json.getJSONObject("query").getJSONObject("results").getJSONObject("channel").getJSONObject("item").getJSONArray("forecast");
-
-                    Log.d("Forecast", array.toString());
-
-                    Gson gson = new Gson();
-                    Type listType = new TypeToken<List<Weather>>(){}.getType();
-                    List<Weather> myModelList = gson.fromJson(array.toString(), listType);
-
-
-
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-
-
-
-        }
-
-
-            //Do anything with response..
-        }
 
 
 
