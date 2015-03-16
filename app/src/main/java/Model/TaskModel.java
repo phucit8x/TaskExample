@@ -5,6 +5,7 @@ import java.lang.String; /**
  */
 
 public class TaskModel {
+    private String id = "";
     private String name = "" ;
     private boolean checked = false ;
     public TaskModel() {}

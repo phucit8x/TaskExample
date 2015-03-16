@@ -1,71 +1,48 @@
 package com.vinhphuc.chotot.tasksexample;
 
-import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Dialog;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.SharedPreferences;
-import android.media.Image;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.os.StrictMode;
-import android.preference.PreferenceManager;
-import android.support.v7.app.ActionBarActivity;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
+import android.text.Editable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.internal.bind.DateTypeAdapter;
 import com.google.gson.reflect.TypeToken;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.json.JSONException;
+import org.json.JSONObject;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.lang.reflect.Type;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 
 import Model.TaskModel;
-import Networking.RequestTask;
-import retrofit.Callback;
-import retrofit.RestAdapter;
-import retrofit.RetrofitError;
-import retrofit.client.Response;
-import retrofit.converter.GsonConverter;
-import retrofit.http.GET;
-import retrofit.http.Path;
 
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends ActionBarActivity  {
 
     private ListView mainListView;
     private TaskModel[] tasks;
@@ -74,7 +51,9 @@ public class MainActivity extends ActionBarActivity {
     final Context context = this;
     public static String SHARED_PREFS_FILE = "SHARED_PREFS_FILE_";//temporary use this one until the API is ready
     public static final String BASE_URL = "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20weather.forecast%20where%20woeid%3D1252431&format=json";
-
+    private ArrayList<TaskModel> taskList;
+    public SharedPreferences prefs;
+    public SharedPreferences.Editor editor;
 
     /**
      * Called when the activity is first created.
@@ -101,15 +80,14 @@ public class MainActivity extends ActionBarActivity {
             }
         });
 
-        ArrayList<TaskModel> taskList = new ArrayList<TaskModel>();
+        taskList = new ArrayList<TaskModel>();
 
-        SharedPreferences prefs = getSharedPreferences(SHARED_PREFS_FILE, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = prefs.edit();
+        prefs = getSharedPreferences(SHARED_PREFS_FILE, Context.MODE_PRIVATE);
+        editor = prefs.edit();
         String value = prefs.getString(SHARED_PREFS_FILE, "");
         tasks = (TaskModel[]) getLastNonConfigurationInstance();
 
-        if( value.equals("")==true)
-        {
+        if (value.equals("") == true) {
 
             if (tasks == null) {
                 tasks = new TaskModel[]{
@@ -117,13 +95,17 @@ public class MainActivity extends ActionBarActivity {
 
                 };
             }
-        }
-        else
-        {
+
+
+            taskList.addAll(Arrays.asList(tasks));
+
+            editor.putString(SHARED_PREFS_FILE, toJson(taskList));
+            editor.commit();
+        } else {
 
             // Reading from SharedPreferences
             String jsonText = prefs.getString(SHARED_PREFS_FILE, "");
-            Log.i("========222==========", jsonText);
+            // Log.i("========222==========", jsonText);
 
             taskList = (ArrayList<TaskModel>) fromJson(jsonText,
                     new TypeToken<ArrayList<TaskModel>>() {
@@ -137,7 +119,6 @@ public class MainActivity extends ActionBarActivity {
 
 
         new RequestTask().execute(BASE_URL);
-
 
 
     }
@@ -160,11 +141,12 @@ public class MainActivity extends ActionBarActivity {
 
         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
         LayoutInflater inflater = this.getLayoutInflater();
-        View dialogView = inflater.inflate(R.layout.new_dialog, null);
+        final View dialogView = inflater.inflate(R.layout.new_dialog, null);
         dialogBuilder.setView(dialogView);
         dialogBuilder.setTitle("Add your task please");
 
-        EditText editText = (EditText) dialogView.findViewById(R.id.textTaskName);
+        final EditText editText = (EditText) dialogView.findViewById(R.id.textTaskName);
+        final CheckBox checkBox = (CheckBox) dialogView.findViewById(R.id.checkBox);
 
         dialogBuilder.setNegativeButton("Hủy", new DialogInterface.OnClickListener() {
             @Override
@@ -177,6 +159,18 @@ public class MainActivity extends ActionBarActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 Log.i("TaskExample", "Vừa nhấn nút OK");
+                Editable taskName = editText.getText();
+
+                //Toast.makeText(getApplicationContext(), taskName.toString(),
+                //  Toast.LENGTH_LONG).show();
+                //Log.i("=---------------", taskName.toString());
+
+                boolean chek = checkBox.isChecked() ? true : false;
+
+
+                addTask(taskName.toString(), chek);
+
+
             }
         });
 
@@ -204,6 +198,15 @@ public class MainActivity extends ActionBarActivity {
 //        dialog.show();
     }
 
+    public void addTask(String taskName, boolean check) {
+
+        taskList.add(new TaskModel(taskName, check));
+        listAdapter = new TaskArrayAdapter(this, taskList);
+        mainListView.setAdapter(listAdapter);
+        // save to db
+        editor.putString(SHARED_PREFS_FILE, toJson(taskList));
+        editor.commit();
+    }
 
     /**
      * Holds child views for one row.
@@ -276,6 +279,9 @@ public class MainActivity extends ActionBarActivity {
                         CheckBox cb = (CheckBox) v;
                         TaskModel task = (TaskModel) cb.getTag();
                         task.setChecked(cb.isChecked());
+
+                       // Log.i(">>>>>>>>>>>>>>>>>", cb.getTag().toString());
+
                     }
                 });
             }
@@ -301,59 +307,98 @@ public class MainActivity extends ActionBarActivity {
     }
 
 
-    // networking
+//    public void editTask(TaskModel task,boolean check) {
+//        for (TaskModel taak : taskList);
+//        {
+//            if(taak.getName()==task.getName())
+//            {
+//
+//                taak.setChecked(check);
+//            }
+//
+//        }
+//
+//    }
 
-    private BroadcastReceiver mReceiver = new BroadcastReceiver() {
+    public class RequestTask extends AsyncTask<String, String, String> {
 
         @Override
-        public void onReceive(Context context, Intent intent) {
-            if (!isConnected()) {
+        protected String doInBackground(String... uri) {
+            HttpClient httpclient = new DefaultHttpClient();
+            HttpResponse response;
+            String responseString = null;
+            try {
+                response = httpclient.execute(new HttpGet(uri[0]));
+                StatusLine statusLine = response.getStatusLine();
+                if(statusLine.getStatusCode() == HttpStatus.SC_OK){
+                    ByteArrayOutputStream out = new ByteArrayOutputStream();
+                    response.getEntity().writeTo(out);
+                    responseString = out.toString();
 
-            } else {
-                //mLoadingText.setText(context.getText(R.string.loading));
-                Toast.makeText(getApplicationContext(), "No network connection", Toast.LENGTH_SHORT).show();
-
+                    out.close();
+                } else{
+                    //Closes the connection.
+                    response.getEntity().getContent().close();
+                    throw new IOException(statusLine.getReasonPhrase());
+                }
+            } catch (ClientProtocolException e) {
+                //TODO Handle problems..
+            } catch (IOException e) {
+                //TODO Handle problems..
             }
+            return responseString;
         }
-    };
+
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+
+            //Log.i("=========>>>====", result);
+
+                try {
+                    JSONObject json = new JSONObject(result);
+
+                    String surname = json.getString("channel");
+                    Log.i("=========>>>====", surname);
+                    // Now do the magic.
+                    Data data = new Gson().fromJson(result, Data.class);
+
+                    // Show it.
+                    System.out.println(data);
 
 
-    // TODO(benp) move to utils class
-    private boolean isConnected() {
-        ConnectivityManager conMngr = (ConnectivityManager) this
-                .getSystemService(Activity.CONNECTIVITY_SERVICE);
-        NetworkInfo wifi = conMngr
-                .getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-        NetworkInfo mobile = conMngr
-                .getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
 
-        return (null != wifi && wifi.isConnected())
-                || (null != mobile && mobile.isConnected());
+
+
+        }
+
+
+            //Do anything with response..
+        }
+
+
+
+}
+class Data {
+    private String title;
+    private Long id;
+    private Boolean children;
+    private List<Data> groups;
+
+    public String getTitle() { return title; }
+    public Long getId() { return id; }
+    public Boolean getChildren() { return children; }
+    public List<Data> getGroups() { return groups; }
+
+    public void setTitle(String title) { this.title = title; }
+    public void setId(Long id) { this.id = id; }
+    public void setChildren(Boolean children) { this.children = children; }
+    public void setGroups(List<Data> groups) { this.groups = groups; }
+
+    public String toString() {
+        return String.format("title:%s,id:%d,children:%s,groups:%s", title, id, children, groups);
     }
-
-
-    Gson gson = new GsonBuilder()
-            .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
-            .registerTypeAdapter(Date.class, new DateTypeAdapter())
-            .create();
-
-    RestAdapter restAdapter = new RestAdapter.Builder()
-            .setEndpoint("https://query.yahooapis.com/v1/public/")
-            .setConverter(new GsonConverter(gson))
-            .build();
-
-    GitHubService service = restAdapter.create(GitHubService.class);
-
-
-    public interface GitHubService {
-        @GET("yql?q=select%20*%20from%20weather.forecast%20where%20woeid%3D1252431&format=json")
-        void getFeed(Callback<Object> response);
-
-
-    }
-
-
-
-
-
 }
