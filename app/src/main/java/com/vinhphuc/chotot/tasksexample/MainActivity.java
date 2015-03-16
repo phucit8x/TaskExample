@@ -29,6 +29,7 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -40,6 +41,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import Model.TaskModel;
+import Model.Weather;
 
 
 public class MainActivity extends ActionBarActivity  {
@@ -351,20 +353,17 @@ public class MainActivity extends ActionBarActivity  {
 
         @Override
         protected void onPostExecute(String result) {
-            super.onPostExecute(result);
-
-            //Log.i("=========>>>====", result);
-
                 try {
                     JSONObject json = new JSONObject(result);
 
-                    String surname = json.getString("channel");
-                    Log.i("=========>>>====", surname);
-                    // Now do the magic.
-                    Data data = new Gson().fromJson(result, Data.class);
+                    JSONArray array = json.getJSONObject("query").getJSONObject("results").getJSONObject("channel").getJSONObject("item").getJSONArray("forecast");
 
-                    // Show it.
-                    System.out.println(data);
+                    Log.d("Forecast", array.toString());
+
+                    Gson gson = new Gson();
+                    Type listType = new TypeToken<List<Weather>>(){}.getType();
+                    List<Weather> myModelList = gson.fromJson(array.toString(), listType);
+
 
 
                 } catch (JSONException e) {
@@ -381,24 +380,4 @@ public class MainActivity extends ActionBarActivity  {
 
 
 
-}
-class Data {
-    private String title;
-    private Long id;
-    private Boolean children;
-    private List<Data> groups;
-
-    public String getTitle() { return title; }
-    public Long getId() { return id; }
-    public Boolean getChildren() { return children; }
-    public List<Data> getGroups() { return groups; }
-
-    public void setTitle(String title) { this.title = title; }
-    public void setId(Long id) { this.id = id; }
-    public void setChildren(Boolean children) { this.children = children; }
-    public void setGroups(List<Data> groups) { this.groups = groups; }
-
-    public String toString() {
-        return String.format("title:%s,id:%d,children:%s,groups:%s", title, id, children, groups);
-    }
 }
